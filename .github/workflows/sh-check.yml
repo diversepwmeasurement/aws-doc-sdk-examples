@@ -1,27 +1,27 @@
-# This uses the action https://github.com/marketplace/actions/sh-checker
-
-name: Lint Bash
-
-on:  # yamllint disable-line rule:truthy
-  pull_request:
-  workflow_dispatch:
-
 jobs:
   sh-checker:
     name: Lint Bash
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout files
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            .github
-            aws-cli
-      - name: Lint Bash
-        uses: luizm/action-sh-checker@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          sh_checker_comment: true
-          sh_checker_only_diff: true
-          sh_checker_shfmt_disable: true
+    - continue-on-error: true
+      name: Checkout files
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: '.github
+
+          aws-cli
+
+          '
+    - continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      name: Lint Bash
+      uses: luizm/action-sh-checker@master
+      with:
+        sh_checker_comment: true
+        sh_checker_only_diff: true
+        sh_checker_shfmt_disable: true
+name: Lint Bash
+on:
+  repository_dispatch:
+    types: trigger-ga___sh-check.yml

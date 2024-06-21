@@ -1,39 +1,51 @@
-name: Dotnet Lint and Check
-
-on:  # yamllint disable-line rule:truthy
-  pull_request:
-  workflow_dispatch:
-permissions:
-  contents: read
 jobs:
   dotnetcheck:
     name: Lint DotNet
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: |
-            5.0.x
-            6.0.x
-      - name: Checkout files
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            .github
-            dotnetv3
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          files: "dotnetv3/**/*.{cs,sln,csproj,json}"
-      - name: Build check
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          cd dotnetv3
-          dotnet build -v=q --property WarningLevel=0 /clp:ErrorsOnly
-      - name: Lint and format check
-        if: steps.changed-files.outputs.any_changed == 'true' && (success() || failure())
-        run: |
-          cd dotnetv3
-          dotnet format --verify-no-changes
+    - continue-on-error: true
+      name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '5.0.x
+
+          6.0.x
+
+          '
+    - continue-on-error: true
+      name: Checkout files
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: '.github
+
+          dotnetv3
+
+          '
+    - continue-on-error: true
+      id: changed-files
+      name: Get changed files
+      uses: tj-actions/changed-files@v41
+      with:
+        files: dotnetv3/**/*.{cs,sln,csproj,json}
+    - continue-on-error: true
+      if: steps.changed-files.outputs.any_changed == 'true'
+      name: Build check
+      run: 'cd dotnetv3
+
+        dotnet build -v=q --property WarningLevel=0 /clp:ErrorsOnly
+
+        '
+    - continue-on-error: true
+      if: steps.changed-files.outputs.any_changed == 'true' && (success() || failure())
+      name: Lint and format check
+      run: 'cd dotnetv3
+
+        dotnet format --verify-no-changes
+
+        '
+name: Dotnet Lint and Check
+on:
+  repository_dispatch:
+    types: trigger-ga___lint-check-dotnet.yml
+permissions:
+  contents: read

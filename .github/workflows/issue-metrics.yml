@@ -1,46 +1,44 @@
-# This workflow searches for issues/pull requests/discussions in a repository, measures several metrics, 
-# and generates a report in form of a GitHub issue.
-#
-# You can adjust the behavior by modifying this file.
-# For more information, see:
-# https://github.com/marketplace/actions/issue-metrics
-
-name: Monthly issue metrics
-on:  # yamllint disable-line rule:truthy
-  workflow_dispatch:
-  schedule:
-    - cron: '3 2 1 * *'
-
-permissions:
-  issues: write
-  pull-requests: read
-
 jobs:
   build:
     name: Issue metrics
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Get dates for last month
-        shell: bash
-        run: |
-          # Calculate the first day of the previous month
-          first_day=$(date -d "last month" +%Y-%m-01)
+    - continue-on-error: true
+      name: Get dates for last month
+      run: '# Calculate the first day of the previous month
 
-          # Calculate the last day of the previous month
-          last_day=$(date -d "$first_day +1 month -1 day" +%Y-%m-%d)
+        first_day=$(date -d "last month" +%Y-%m-01)
 
-          # Set an environment variable with the date range
-          echo "last_month=$first_day..$last_day" >> "$GITHUB_ENV"
 
-      - name: Run issue-metrics tool
-        uses: github/issue-metrics@v2
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SEARCH_QUERY: 'repo:awsdocs/aws-doc-sdk-examples is:issue created:${{ env.last_month }} -reason:"not planned"'
+        # Calculate the last day of the previous month
 
-      - name: Create issue
-        uses: peter-evans/create-issue-from-file@v5
-        with:
-          title: Monthly issue metrics report  ${{ env.last_month }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          content-filepath: ./issue_metrics.md
+        last_day=$(date -d "$first_day +1 month -1 day" +%Y-%m-%d)
+
+
+        # Set an environment variable with the date range
+
+        echo "last_month=$first_day..$last_day" >> "$GITHUB_ENV"
+
+        '
+      shell: bash
+    - continue-on-error: true
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SEARCH_QUERY: repo:awsdocs/aws-doc-sdk-examples is:issue created:${{ env.last_month
+          }} -reason:"not planned"
+      name: Run issue-metrics tool
+      uses: github/issue-metrics@v2
+    - continue-on-error: true
+      name: Create issue
+      uses: peter-evans/create-issue-from-file@v5
+      with:
+        content-filepath: ./issue_metrics.md
+        title: Monthly issue metrics report  ${{ env.last_month }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+name: Monthly issue metrics
+on:
+  repository_dispatch:
+    types: trigger-ga___issue-metrics.yml
+permissions:
+  issues: write
+  pull-requests: read

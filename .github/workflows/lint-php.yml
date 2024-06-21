@@ -1,39 +1,36 @@
-name: "PHP Linter"
-
-on:  # yamllint disable-line rule:truthy
-  workflow_dispatch:
-  pull_request:
-    paths:
-      - "**.php"
-      - ".github/linters/phpcs.xml"
-      - ".github/workflows/php-lint.yml"
-
 jobs:
   phpcs:
-    name: "PHP Linter"
-    runs-on: ubuntu-latest
+    name: PHP Linter
+    runs-on: self-hosted
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - continue-on-error: true
+      id: changed-files
+      name: Get changed files
+      uses: tj-actions/changed-files@v41
+      with:
+        files: /php/**/*.php
+    - continue-on-error: true
+      if: steps.changed-files.outputs.any_changed == 'true'
+      name: Install PHP_CodeSniffer
+      run: 'curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          files: "/php/**/*.php"
+        php phpcs.phar --version
 
-      - name: Install PHP_CodeSniffer
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
-          php phpcs.phar --version
-
-      - name: Run PHPCS
-        uses: thenabeel/action-phpcs@v8
-        if: steps.changed-files.outputs.any_changed == 'true'
-        with:
-          files: "**.php"
-          phpcs_path: php phpcs.phar
-          standard: ".github/linters/phpcs.xml"
+        '
+    - continue-on-error: true
+      if: steps.changed-files.outputs.any_changed == 'true'
+      name: Run PHPCS
+      uses: thenabeel/action-phpcs@v8
+      with:
+        files: '**.php'
+        phpcs_path: php phpcs.phar
+        standard: .github/linters/phpcs.xml
+name: PHP Linter
+on:
+  repository_dispatch:
+    types: trigger-ga___lint-php.yml

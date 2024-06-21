@@ -1,40 +1,28 @@
-name: "Audit Labels"
-
-on:  # yamllint disable-line rule:truthy
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
 jobs:
   label-linter:
+    if: github.event.pull_request.merged == true
     name: Audit Labels
     permissions:
       contents: read
       pull-requests: write
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          sparse-checkout: .github/allowed-labels.yml
-          sparse-checkout-cone-mode: false
-      
-      # The Audit Labels workflow creates, renames, updates
-      # or deletes labels based on a list of allowed labels.
-      #
-      # To use this workflow, you must set up and configure 
-      # labels in a .github/allowed-labels.yml file
-      #
-      # For more information, see:
-      # https://github.com/crazy-max/ghaction-github-labeler
-      - name: Audit Labels
-        if: success()
-        uses: crazy-max/ghaction-github-labeler@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          yaml-file: .github/allowed-labels.yml
-          skip-delete: true
-          dry-run: false
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+      with:
+        sparse-checkout: .github/allowed-labels.yml
+        sparse-checkout-cone-mode: false
+    - continue-on-error: true
+      if: success()
+      name: Audit Labels
+      uses: crazy-max/ghaction-github-labeler@v4
+      with:
+        dry-run: false
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        skip-delete: true
+        yaml-file: .github/allowed-labels.yml
+name: Audit Labels
+on:
+  repository_dispatch:
+    types: trigger-ga___label-auditor.yml

@@ -1,18 +1,18 @@
-name: Pull Request Stats
-
-on:  # yamllint disable-line rule:truthy
-  workflow_dispatch:
-
 jobs:
   stats:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Run pull request stats
-        uses: flowwer-dev/pull-request-stats@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: 'piedpiper'
-          period: 7
-          charts: true
-          disableLinks: true
-          sortBy: 'COMMENTS'
+    - continue-on-error: true
+      name: Run pull request stats
+      uses: flowwer-dev/pull-request-stats@master
+      with:
+        charts: true
+        disableLinks: true
+        organization: piedpiper
+        period: 7
+        sortBy: COMMENTS
+        token: ${{ secrets.GITHUB_TOKEN }}
+name: Pull Request Stats
+on:
+  repository_dispatch:
+    types: trigger-ga___pr_stats.yml

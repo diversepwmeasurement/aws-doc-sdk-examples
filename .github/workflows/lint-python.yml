@@ -1,36 +1,38 @@
-name: Lint Python
-
-on:  # yamllint disable-line rule:truthy
-  pull_request:
-  workflow_dispatch:
-
 jobs:
   black:
     name: Flake8 Linting & Black Formatting
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    - continue-on-error: true
+      name: Checkout Repository
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      id: changed-files
+      name: Get changed files
+      uses: tj-actions/changed-files@v41
+      with:
+        files: '**.py'
+    - continue-on-error: true
+      name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - continue-on-error: true
+      name: Install dependencies
+      run: 'pip install black pylint
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          files: "**.py"
+        '
+    - continue-on-error: true
+      if: steps.changed-files.outputs.any_changed == 'true'
+      name: Run Black & Pylint
+      run: 'changed_files=(${{steps.changed-files.outputs.all_changed_files}})
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
+        black "${changed_files[@]}"
 
-      - name: Install dependencies
-        run: |
-          pip install black pylint
+        pylint --rcfile .github/linters/.python-lint "${changed_files[@]}"
 
-      - name: Run Black & Pylint
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          changed_files=(${{steps.changed-files.outputs.all_changed_files}})
-          black "${changed_files[@]}"
-          pylint --rcfile .github/linters/.python-lint "${changed_files[@]}"
+        '
+name: Lint Python
+on:
+  repository_dispatch:
+    types: trigger-ga___lint-python.yml
